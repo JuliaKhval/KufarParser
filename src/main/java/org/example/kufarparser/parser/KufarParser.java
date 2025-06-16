@@ -17,7 +17,7 @@ import static com.codeborne.selenide.CollectionCondition.sizeGreaterThan;
 public class KufarParser {
 
     public static List<Apartment> parseApartments() {
-        String baseUrl = "https://re.kufar.by/l/grodno/snyat/kvartiru/3k?cur=USD";
+        String baseUrl = "https://re.kufar.by/l/grodno/snyat/kvartiru/4k?cur=USD";
         open(baseUrl);
 
         List<Apartment> allApartments = new ArrayList<>();
