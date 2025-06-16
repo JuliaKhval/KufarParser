@@ -10,40 +10,6 @@ import java.util.stream.Collectors;
 
 public class ApartmentFilter {
 
-    public static List<Apartment> filterByStreet(List<Apartment> apartments, String street) {
-        if (street == null || street.trim().isEmpty()) return apartments;
-
-        String normalized = street.toLowerCase().trim();
-        return apartments.stream()
-                .filter(apt -> apt.getAddress() != null && apt.getAddress().toLowerCase().contains(normalized))
-                .collect(Collectors.toList());
-    }
-
-    public static List<Apartment> filterByRooms(List<Apartment> apartments, Integer requiredRooms) {
-        if (requiredRooms == null) return apartments;
-
-        return apartments.stream()
-                .filter(apt -> extractRoomCount(apt.getRooms()) == requiredRooms)
-                .collect(Collectors.toList());
-    }
-
-    public static List<Apartment> filterByMinPrice(List<Apartment> apartments, Double minPrice) {
-        if (minPrice == null) return apartments;
-
-        return apartments.stream()
-                .filter(apt -> extractPrice(apt.getPriceUSD()) >= minPrice)
-                .collect(Collectors.toList());
-    }
-
-    public static List<Apartment> filterByMaxPrice(List<Apartment> apartments, Double maxPrice) {
-        if (maxPrice == null) return apartments;
-
-        return apartments.stream()
-                .filter(apt -> extractPrice(apt.getPriceUSD()) <= maxPrice)
-                .collect(Collectors.toList());
-    }
-
-
     public static List<Apartment> applyFilters(List<Apartment> apartments,
                                                String street,
                                                Integer rooms,
@@ -52,36 +18,65 @@ public class ApartmentFilter {
 
         List<Apartment> result = new ArrayList<>(apartments);
 
-        if (street != null) {
+
+        if (street != null && !street.trim().isEmpty()) {
             result = filterByStreet(result, street);
         }
 
-        if (rooms != null) {
+
+        if (rooms != null && rooms > 0) {
             result = filterByRooms(result, rooms);
         }
 
-        if (minPrice != null) {
-            result = filterByMinPrice(result, minPrice);
+
+        if (minPrice != null && maxPrice != null) {
+            result = filterByPriceRange(result, minPrice, maxPrice);
         }
 
-        if (maxPrice != null) {
-            result = filterByMaxPrice(result, maxPrice);
-        }
+
 
         return result;
     }
 
+    public static List<Apartment> filterByStreet(List<Apartment> apartments, String street) {
+        String normalized = street.toLowerCase().trim();
+        return apartments.stream()
+                .filter(apt -> apt.getAddress() != null && apt.getAddress().toLowerCase().contains(normalized))
+                .collect(Collectors.toList());
+    }
+
+    public static List<Apartment> filterByRooms(List<Apartment> apartments, int requiredRooms) {
+        return apartments.stream()
+                .filter(apt -> extractRoomCount(apt.getRooms()) == requiredRooms)
+                .collect(Collectors.toList());
+    }
+
+    public static List<Apartment> filterByPriceRange(List<Apartment> apartments, double minPrice, double maxPrice) {
+        return apartments.stream().filter(apt -> {
+                    String priceStr = apt.getPriceUSD();
+
+
+                    if ("не указано".equalsIgnoreCase(priceStr)) {
+                        return true;
+                    }
+
+
+                    try {
+                        double price = Double.parseDouble(priceStr.replaceAll("[^\\d.]", ""));
+                        return price >= minPrice && price <= maxPrice;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
+    }
 
     private static int extractRoomCount(String roomsStr) {
         if (roomsStr == null || roomsStr.isEmpty()) return -1;
-
         Pattern pattern = Pattern.compile("\\d+");
         Matcher matcher = pattern.matcher(roomsStr);
         return matcher.find() ? Integer.parseInt(matcher.group()) : -1;
     }
 
-    private static double extractPrice(String priceStr) {
-        if (priceStr == null || "договорная".equalsIgnoreCase(priceStr)) return 0;
-        return Double.parseDouble(priceStr.replaceAll("[^\\d.]", ""));
-    }
+
 }
