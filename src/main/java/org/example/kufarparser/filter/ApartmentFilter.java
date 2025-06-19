@@ -1,6 +1,7 @@
 package org.example.kufarparser.filter;
 
 import org.example.kufarparser.model.Apartment;
+import org.example.kufarparser.request.FilterRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,27 +11,23 @@ import java.util.stream.Collectors;
 
 public class ApartmentFilter {
 
-    public static List<Apartment> applyFilters(List<Apartment> apartments,
-                                               String street,
-                                               Integer rooms,
-                                               Double minPrice,
-                                               Double maxPrice) {
+    public static List<Apartment> applyFilters(List<Apartment> apartments, FilterRequest request) {
 
         List<Apartment> result = new ArrayList<>(apartments);
 
 
-        if (street != null && !street.trim().isEmpty()) {
-            result = filterByStreet(result, street);
+        if (request.getStreet() != null && !request.getStreet().trim().isEmpty()) {
+            result = filterByStreet(result, request.getStreet());
         }
 
 
-        if (rooms != null && rooms > 0) {
-            result = filterByRooms(result, rooms);
+        if (request.getRooms() != null && !request.getRooms().isEmpty()) {
+            result = filterByRooms(result, request.getRooms());
         }
 
 
-        if (minPrice != null && maxPrice != null) {
-            result = filterByPriceRange(result, minPrice, maxPrice);
+        if (request.getMinPrice() != null && request.getMaxPrice() != null) {
+            result = filterByPriceRange(result, request.getMinPrice(), request.getMaxPrice());
         }
 
 
@@ -45,10 +42,10 @@ public class ApartmentFilter {
                 .collect(Collectors.toList());
     }
 
-    public static List<Apartment> filterByRooms(List<Apartment> apartments, int requiredRooms) {
+    public static List<Apartment> filterByRooms(List<Apartment> apartments, List<Integer> requiredRooms) {
         return apartments.stream()
-                .filter(apt -> extractRoomCount(apt.getRooms()) == requiredRooms)
-                .collect(Collectors.toList());
+                .filter(apt -> requiredRooms.contains(extractRoomCount(apt.getRooms())))
+                .toList();
     }
 
     public static List<Apartment> filterByPriceRange(List<Apartment> apartments, double minPrice, double maxPrice) {
@@ -70,6 +67,7 @@ public class ApartmentFilter {
                 })
                 .collect(Collectors.toList());
     }
+
 
     private static int extractRoomCount(String roomsStr) {
         if (roomsStr == null || roomsStr.isEmpty()) return -1;
