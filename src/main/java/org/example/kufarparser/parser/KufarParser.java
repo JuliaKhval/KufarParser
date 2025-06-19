@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.codeborne.selenide.CollectionCondition.sizeGreaterThan;
 import static com.codeborne.selenide.Selenide.$;
@@ -32,15 +33,21 @@ public class KufarParser {
             int count = $$(By.cssSelector("a.styles_wrapper__Q06m9")).size();
             System.out.println("Найдено квартир на странице: " + count);
 
-            $$(By.cssSelector("a.styles_wrapper__Q06m9")).forEach(el -> {
+            List<SelenideElement> elements = $$(By.cssSelector("a.styles_wrapper__Q06m9"))
+                    .stream()
+                    .collect(Collectors.toList());
+
+            for (SelenideElement el : elements) {
+                if (stopParsing.get()) break;
+
                 try {
                     String url = el.getAttribute("href");
                     String id = extractIdFromUrl(url);
 
-                    if (repo.existsById(id)){
-                        System.out.println(" Найдено старое объявление: " + id);
+                    if (repo.existsById(id)) {
+                        System.out.println("Найдено старое объявление");
                         stopParsing.set(true);
-                        return;
+                        continue;
                     }
 
                     String priceByr = safeText(el, "span.styles_price__byr__lLSfd", "не указана");
@@ -63,7 +70,6 @@ public class KufarParser {
                             .filter(src -> src != null && !src.isEmpty())
                             .toList();
 
-
                     Apartment apartment = new Apartment(
                             id,
                             priceByr,
@@ -83,9 +89,9 @@ public class KufarParser {
                     repo.save(apartment);
 
                 } catch (Exception e) {
-                    System.err.println("Ошибка парсинга карточки: " + e.getMessage());
+                    System.err.println("Ошибка при парсинге элемента: " + e.getMessage());
                 }
-            });
+            }
 
             if ($("[data-testid='realty-pagination-next-link']").is(Condition.tagName("a"))) {
                 $("[data-testid='realty-pagination-next-link']").click();
