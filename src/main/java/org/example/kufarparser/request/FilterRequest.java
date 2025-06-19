@@ -10,7 +10,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FilterRequest {
+
         private String type;
+        private String district;
         private String street;
         private List<Integer> Rooms;
         private Double minPrice;
