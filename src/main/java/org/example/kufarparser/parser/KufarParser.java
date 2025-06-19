@@ -21,9 +21,18 @@ import static com.codeborne.selenide.Selenide.$$;
 
 public class KufarParser {
 
-    public static List<Apartment> parseAndSave(ApartmentRepository repo) {
-        String startUrl = "https://re.kufar.by/l/grodno/snyat/kvartiru/4k?cur=USD";
-        Selenide.open(startUrl);
+    private static String buildUrl(String type) {
+        if ("снять".equalsIgnoreCase(type)) {
+            return "https://re.kufar.by/l/grodno/snyat/kvartiru?cur=USD&prc=r%3A0%2C200&rms=v.or%3A3%2C2&size=30";
+        } else {
+            return "https://re.kufar.by/l/grodno/kupit-kvartiru-deshevo/3k?size=30";
+        }
+    }
+    public static List<Apartment> parseAndSave(String type,ApartmentRepository repo) {
+        String StartUrl = buildUrl(type);
+
+
+        Selenide.open(StartUrl);
 
         List<Apartment> apartments = new ArrayList<>();
         AtomicBoolean stopParsing = new AtomicBoolean(false);

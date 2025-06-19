@@ -4,13 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class FilterRequest {
+        private String type;
         private String street;
-        private Integer Rooms;
-
+        private List<Integer> Rooms;
         private Double minPrice;
         private Double maxPrice;
 }

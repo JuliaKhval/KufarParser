@@ -20,11 +20,11 @@ public class FindController {
     @PostMapping
     public List<Apartment> find(@RequestBody FilterRequest request) {
 
-        KufarParser.parseAndSave(apartmentRepo);
+        KufarParser.parseAndSave(request.getType(),apartmentRepo);
 
         List<Apartment> all = apartmentRepo.findAll();
 
 
-        return ApartmentFilter.applyFilters(all, request.getStreet(), request.getRooms(), request.getMinPrice(), request.getMaxPrice());
+        return ApartmentFilter.applyFilters(all, request);
     }
 }
