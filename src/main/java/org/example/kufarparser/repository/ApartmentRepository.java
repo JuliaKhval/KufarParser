@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ApartmentRepository extends JpaRepository<Apartment, String> {
-    List<Apartment> findByAddressContainingIgnoreCase(String street);
+    List<Apartment> findAll();
 }

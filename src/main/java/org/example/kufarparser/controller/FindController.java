@@ -24,7 +24,7 @@ public class FindController {
     @PostMapping
     public List<Apartment> find(@RequestBody FilterRequest request) {
 
-        KufarParser.parseAndSave(request.getType(),apartmentRepo);
+        KufarParser.parseAndSave(request.getCity(),request.getType(),apartmentRepo);
 
         List<Apartment> all = apartmentRepo.findAll();
 

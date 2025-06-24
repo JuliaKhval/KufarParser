@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FilterRequest {
 
+        private String city;
         private String type;
         private String district;
         private String street;

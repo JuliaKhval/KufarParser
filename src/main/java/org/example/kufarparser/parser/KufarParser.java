@@ -4,6 +4,7 @@ import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.kufarparser.City;
 import org.example.kufarparser.model.Apartment;
 import org.example.kufarparser.repository.ApartmentRepository;
 import org.openqa.selenium.By;
@@ -21,15 +22,24 @@ import static com.codeborne.selenide.Selenide.$$;
 
 public class KufarParser {
 
-    private static String buildUrl(String type) {
-        if ("снять".equalsIgnoreCase(type)) {
-            return "https://re.kufar.by/l/grodno/snyat/kvartiru?cur=USD&prc=r%3A0%2C200&rms=v.or%3A3%2C2&size=30";
+    public static String buildUrl(String city, String type) {
+        String baseUrl = "https://re.kufar.by/l/%s/%s/kvartiru?cur=USD";
+
+        if ("купить".equalsIgnoreCase(type)) {
+            return String.format("https://re.kufar.by/l/%s/kupit/kvartiru?cur=USD", city);
         } else {
-            return "https://re.kufar.by/l/grodno/kupit-kvartiru-deshevo/3k?size=30";
+            return String.format(baseUrl, city, "snyat");
         }
     }
-    public static List<Apartment> parseAndSave(String type,ApartmentRepository repo) {
-        String StartUrl = buildUrl(type);
+//    private static String buildUrl(String type) {
+//        if ("снять".equalsIgnoreCase(type)) {
+//            return "https://re.kufar.by/l/grodno/snyat/kvartiru?cur=USD&prc=r%3A0%2C200&rms=v.or%3A3%2C2&size=30";
+//        } else {
+//            return "https://re.kufar.by/l/grodno/kupit-kvartiru-deshevo/3k?size=30";
+//        }
+//    }
+    public static List<Apartment> parseAndSave(String city,String type,ApartmentRepository repo) {
+        String StartUrl = buildUrl(City.fromDisplayName(city),type);//метод чтобы по названию возвращал url города
 
 
         Selenide.open(StartUrl);

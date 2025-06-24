@@ -38,7 +38,7 @@ public class ApartmentFilter {
         }
 
 
-        if (request.getMinPrice() != null && request.getMaxPrice() != null) {
+        if (request.getMinPrice() != null || request.getMaxPrice() != null) {//переделать чтобы работало с одним ограничением сверху или снизу
             result = filterByPriceRange(result, request.getMinPrice(), request.getMaxPrice());
         }
 
