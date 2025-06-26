@@ -9,6 +9,7 @@ import org.example.kufarparser.model.Apartment;
 import org.example.kufarparser.repository.ApartmentRepository;
 import org.openqa.selenium.By;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,8 +18,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.codeborne.selenide.CollectionCondition.sizeGreaterThan;
+import static com.codeborne.selenide.Condition.disappear;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
+import static java.lang.Thread.sleep;
 
 public class KufarParser {
 
@@ -31,33 +34,27 @@ public class KufarParser {
             return String.format(baseUrl, city, "snyat");
         }
     }
-//    private static String buildUrl(String type) {
-//        if ("снять".equalsIgnoreCase(type)) {
-//            return "https://re.kufar.by/l/grodno/snyat/kvartiru?cur=USD&prc=r%3A0%2C200&rms=v.or%3A3%2C2&size=30";
-//        } else {
-//            return "https://re.kufar.by/l/grodno/kupit-kvartiru-deshevo/3k?size=30";
-//        }
-//    }
+
+
+
     public static List<Apartment> parseAndSave(String city,String type,ApartmentRepository repo) {
         String StartUrl = buildUrl(City.fromDisplayName(city),type);//метод чтобы по названию возвращал url города
 
 
         Selenide.open(StartUrl);
 
-        List<Apartment> apartments = new ArrayList<>();
-        AtomicBoolean stopParsing = new AtomicBoolean(false);
-        while (true) {
-            $$(By.cssSelector("a.styles_wrapper__Q06m9")).shouldBe(sizeGreaterThan(0));
 
-            int count = $$(By.cssSelector("a.styles_wrapper__Q06m9")).size();
-            System.out.println("Найдено квартир на странице: " + count);
+        List<Apartment> apartments = new ArrayList<>();
+        boolean stopParsing = false;
+        while (!stopParsing)  {
+            $$(By.cssSelector("a.styles_wrapper__Q06m9")).shouldBe(sizeGreaterThan(0));
 
             List<SelenideElement> elements = $$(By.cssSelector("a.styles_wrapper__Q06m9"))
                     .stream()
                     .collect(Collectors.toList());
 
             for (SelenideElement el : elements) {
-                if (stopParsing.get()) break;
+
 
                 try {
                     String url = el.getAttribute("href");
@@ -65,9 +62,10 @@ public class KufarParser {
 
                     if (repo.existsById(id)) {
                         System.out.println("Найдено старое объявление");
-                        stopParsing.set(true);
-                        continue;
+                        stopParsing = true;
+                        break;
                     }
+
 
                     String priceByr = safeText(el, "span.styles_price__byr__lLSfd", "не указана");
                     String priceUsd = safeText(el, "span.styles_price__usd__HpXMa", "не указана");
@@ -112,6 +110,8 @@ public class KufarParser {
                 }
             }
 
+            if(stopParsing)break;
+
             if ($("[data-testid='realty-pagination-next-link']").is(Condition.tagName("a"))) {
                 $("[data-testid='realty-pagination-next-link']").click();
                 Selenide.sleep(2000);
@@ -138,4 +138,6 @@ public class KufarParser {
             return def;
         }
     }
+
+
 }

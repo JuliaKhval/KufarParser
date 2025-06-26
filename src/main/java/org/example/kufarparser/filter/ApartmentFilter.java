@@ -13,16 +13,17 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.example.kufarparser.repository.DistrictRepository;
 
+@RequiredArgsConstructor
 public class ApartmentFilter {
+
 
 
 
     public static List<Apartment> applyFilters(List<Apartment> apartments, FilterRequest request,DistrictRepository districtRepo) {
 
         List<Apartment> result = new ArrayList<>(apartments);
-
+        result = filterByCity(result,request.getCity());
 
 
         if (request.getStreet() != null && !request.getStreet().trim().isEmpty()) {
@@ -33,20 +34,24 @@ public class ApartmentFilter {
             result = filterByDistrict(result,request.getDistrict(),districtRepo);
         }
 
-        if (request.getRooms() != null && !request.getRooms().isEmpty()) {
-            result = filterByRooms(result, request.getRooms());
+        result = filterByRooms(result, request.getRooms());
+
+
+
+        if (request.getMinPrice() != null || request.getMaxPrice() != null) {
+            result = filterByPriceRange(result,
+                    request.getMinPrice() != null ? request.getMinPrice() : 0,
+                    request.getMaxPrice() != null ? request.getMaxPrice() : Double.MAX_VALUE);
         }
-
-
-        if (request.getMinPrice() != null || request.getMaxPrice() != null) {//переделать чтобы работало с одним ограничением сверху или снизу
-            result = filterByPriceRange(result, request.getMinPrice(), request.getMaxPrice());
-        }
-
-
 
         return result;
     }
-
+    public static List<Apartment> filterByCity(List<Apartment> apartments, String city) {
+        String normalized = city.toLowerCase().trim();
+        return apartments.stream()
+                .filter(apt -> apt.getAddress() != null && apt.getAddress().toLowerCase().contains(normalized))
+                .collect(Collectors.toList());
+    }
     public static List<Apartment> filterByStreet(List<Apartment> apartments, String street) {
         String normalized = street.toLowerCase().trim();
         return apartments.stream()
@@ -55,10 +60,19 @@ public class ApartmentFilter {
     }
 
     public static List<Apartment> filterByRooms(List<Apartment> apartments, List<Integer> requiredRooms) {
+        if (requiredRooms == null || requiredRooms.isEmpty()) {
+            return apartments;
+        }
+
         return apartments.stream()
-                .filter(apt -> requiredRooms.contains(extractRoomCount(apt.getRooms())))
-                .toList();
+                .filter(apt -> {
+                    Integer rooms = extractRoomCount(apt.getRooms());
+                    return rooms != null && requiredRooms.contains(rooms);
+                })
+                .collect(Collectors.toList());
     }
+
+
 
     public static List<Apartment> filterByPriceRange(List<Apartment> apartments, double minPrice, double maxPrice) {
         return apartments.stream().filter(apt -> {
